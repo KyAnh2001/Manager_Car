@@ -1,0 +1,190 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link href="{% static 'libs/bootstrap-touchspin/dist/jquery.bootstrap-touchspin.min.css' %}" rel="stylesheet" />
+{% endblock %}
+{% block contents %}
+                        <div class="row">
+                            <div class="col-xl-8">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table align-middle mb-0 table-nowrap">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Product</th>
+                                                        <th>Product Desc</th>
+                                                        <th>Price</th>
+                                                        <th>Quantity</th>
+                                                        <th colspan="2">Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% csrf_token %}
+                                                    {% for item in cart_items %}
+                                                    <tr>
+                                                        <td>
+                                                            <img src="{{ item.product.image.url }}" alt="product-img"
+                                                                title="product-img" class="avatar-md" />
+                                                        </td>
+                                                        <td>
+                                                            <h5 class="font-size-14 text-truncate"><a href="{% url 'car-productdetail' item.product.pid %}" class="text-dark">{{ item.product.title }}</a></h5>
+{#                                                            <p class="mb-0">Color : <span class="fw-medium">Maroon</span></p>#}
+                                                        </td>
+                                                        <td>
+                                                            $ {{ item.product.price }}
+                                                        </td>
+                                                        <td>
+                                                            <div class="me-3" style="width: 120px;">
+                                                                <input data-id="{{ item.cid }}" type="text" value="{{ item.quantity }}" name="demo_vertical" id="quantity-{{ item.id }}">
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            $ <span id="total-{{ item.cid }}" data-price="{{ item.get_price }}">{{ item.get_price }}</span>
+                                                        </td>
+                                                        <td>
+                                                            <a href="javascript:void(0);" class="action-icon text-danger delete-item" data-cid="{{ item.cid }}"> <i class="mdi mdi-trash-can font-size-18"></i></a>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="row mt-4">
+                                            <div class="col-sm-6">
+                                                <a href="{% url "car-products" %}" class="btn btn-secondary">
+                                                    <i class="mdi mdi-arrow-left me-1"></i> Continue Shopping </a>
+                                            </div> <!-- end col -->
+                                            <div class="col-sm-6">
+                                                <div class="text-sm-end mt-2 mt-sm-0">
+                                                    <a href="{% url "car-checkout" %}" class="btn btn-success checkout-item">
+                                                        <i class="mdi mdi-cart-arrow-right me-1"></i> Checkout </a>
+                                                </div>
+                                            </div> <!-- end col -->
+                                        </div> <!-- end row-->
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-4">
+                                 <div class="card">
+                                    <div class="card-body">
+                                        <h4 class="card-title mb-3">Order Summary</h4>
+
+                                        <div class="table-responsive">
+                                            <table class="table mb-0">
+                                                <tbody id="order-summary">
+                                                    <tr>
+                                                        <td>Grand Total :</td>
+                                                        <td><span id="grand-total">{{ subtotal }}</span> VND</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Discount : </td>
+                                                        <td>- <span id="discount-total">{{ discount }}</span> VND</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Estimated Tax : </td>
+                                                        <td><span id="tax-total">{{ tax }}</span> VND</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Total :</th>
+                                                        <th><span id="order-total">{{ total }}</span> VND</th>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <!-- end table-responsive -->
+                                    </div>
+                                </div>
+                                <!-- end card -->
+                            </div>
+                        </div>
+                        <!-- end row -->
+{% endblock %}
+
+{% block extra_javascript %}
+    <!-- Bootrstrap touchspin -->
+    <script src="{% static 'libs/bootstrap-touchspin/dist/jquery.bootstrap-touchspin.min.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.3.1/decimal.min.js"></script>
+    <script src="{% static 'js/pages/ecommerce-cart.init.js' %}"></script>
+
+    <script>
+    $(document).ready(function() {
+       // updateOrderSummary function
+      function updateOrderSummary() {
+          var subtotal = Decimal('0');
+          var taxRate = Decimal('0.05'); // 5% tax rate
+          var discount = Decimal('{{ discount }}'); // example discount value
+
+          // Loop through all cart items and calculate subtotal
+          {% for item in cart_items %}
+            subtotal = subtotal.plus('{{ item.get_price }}');
+          {% endfor %}
+
+          // Calculate tax and total
+            var tax = subtotal.times(taxRate);
+            var total_ = subtotal.plus(tax).minus(discount);
+
+          // Update table cells with calculated values
+          $('#order-summary #subtotal').text(subtotal.toFixed(2));
+          $('#order-summary #tax').text(tax.toFixed(2));
+          $('#order-summary #discount').text('- ' + discount.toFixed(1) + ' VND')
+          $('#order-summary #total').text(total_.toFixed(1)  + ' VND');
+      }
+
+      $('input[name="demo_vertical"]').on('change', function() {
+        var id = $(this).data('id');
+        var quantity = $(this).val();
+        $.ajax({
+          url: 'update_cart_item/',
+          method: 'POST',
+          data: {
+            'id': id,
+            'quantity': quantity,
+            'csrfmiddlewaretoken': '{{ csrf_token }}',
+          },
+          success: function(response) {
+            // Update the total price span with the new price returned in the response
+            console.log(response);
+            if (response.success) {
+                var total = Number(response.total_price);
+                var subtotal =  Number(response.subtotal);
+                var discount =  Number(response.discount);
+                var tax =  Number(response.tax);
+                var total_ =  Number(response.total);
+                $('#total-' + id).text(total.toFixed(2));
+                $('#grand-total').text(subtotal.toFixed(2));
+                $('#discount-total').text(discount.toFixed(2));
+                $('#tax-total').text(tax.toFixed(2));
+                $('#order-total').text(total_.toFixed(2));
+                updateOrderSummary(); // call the updateOrderSummary function
+            } else {
+                console.log(response.error);
+            }
+          },
+          error: function(xhr, status, error) {
+            console.error(error);
+          }
+        });
+      });
+
+      $('.delete-item').on('click', function() {
+            var cid = $(this).data('cid');
+            $.ajax({
+              url: 'delete_cart_item/',
+              method: 'POST',
+              data: {
+                'cid': cid,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+              },
+              success: function(response) {
+                  location.reload();
+              },
+              error: function(xhr, status, error) {
+                console.error(error);
+              }
+            });
+          });
+    });
+    </script>
+{% endblock %}

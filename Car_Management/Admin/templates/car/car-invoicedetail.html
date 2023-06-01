@@ -1,0 +1,131 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block contents %}
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="invoice-title">
+                                            <h4 class="float-end font-size-16">Order # {{ order }}</h4>
+                                            <div class="mb-4">
+                                                <img src="{% static 'images/dark1.png'%}" alt="logo" height="60"/>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <address>
+                                                    <strong>Billed To:</strong><br>
+                                                    {{ customer.name }}<br>
+                                                    {{ customer.address }}<br>
+                                                    {{ customer.ward }}<br>
+                                                    {{ customer.district }}, {{ customer.city}}
+                                                </address>
+                                            </div>
+{#                                            <div class="col-sm-6 text-sm-end">#}
+{#                                                <address class="mt-2 mt-sm-0">#}
+{#                                                    <strong>Shipped To:</strong><br>#}
+{#                                                    Kenny Rigdon<br>#}
+{#                                                    1234 Main<br>#}
+{#                                                    Apt. 4B<br>#}
+{#                                                    Springfield, ST 54321#}
+{#                                                </address>#}
+{#                                            </div>#}
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-6 mt-3">
+                                                <address>
+                                                    <strong>Contact:</strong><br>
+                                                    {{ customer.contact }}<br>
+                                                    {{ customer.email }}
+                                                </address>
+                                            </div>
+                                            <div class="col-sm-6 mt-3 text-sm-end">
+                                                <address>
+                                                    <strong>Order Date:</strong><br>
+                                                    October 16, 2019<br><br>
+                                                </address>
+                                            </div>
+                                        </div>
+                                        <div class="py-2 mt-3">
+                                            <h3 class="font-size-15 fw-bold">Order summary</h3>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-nowrap">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="width: 70px;">No.</th>
+                                                        <th>Item</th>
+                                                        <th class="text-end">Price</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for item in cart_item %}
+                                                    <tr>
+                                                        <td>{{ forloop.counter }}</td>
+                                                        <td>{{ item.product.title }}</td>
+                                                        <td class="text-end">{{ item.get_price }} VND</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                    <tr>
+                                                        <td colspan="2" class="text-end">Sub Total</td>
+                                                        <td class="text-end">{{ order.grand_total }} VND</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="2" class="border-0 text-end">
+                                                            <strong>Shipping</strong></td>
+                                                        <td class="border-0 text-end">FREE</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="2" class="border-0 text-end">
+                                                            <strong>Tax</strong></td>
+                                                        <td class="border-0 text-end">+ {{ order.tax }} VND</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="2" class="border-0 text-end">
+                                                            <strong>Total</strong></td>
+                                                        <td class="border-0 text-end"><h4 class="m-0">{{ order.total_price }} VND</h4></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="d-print-none">
+                                            <div class="float-end">
+                                                {% csrf_token %}
+                                                <a href="javascript:window.print()" class="btn btn-success waves-effect waves-light me-1"><i class="fa fa-print"></i></a>
+                                                <a href="{% url 'car-invoices' %}" data-oid="{{ order.oid }}"  class="btn btn-primary w-md waves-effect waves-light send-invoice">Send</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end row -->
+
+                
+{% endblock %}
+
+{% block extra_javascript %}
+    <script>
+    $(document).ready(function() {
+      $('.send-invoice').on('click', function() {
+            var oid = $(this).data('oid');
+            $.ajax({
+              url: '',
+              method: 'POST',
+              data: {
+                'oid': oid,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+              },
+              success: function(response) {
+                  console.log(response);
+              },
+              error: function(xhr, status, error) {
+                console.error(error);
+              }
+            });
+          });
+    });
+    </script>
+{% endblock %}

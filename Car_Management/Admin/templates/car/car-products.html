@@ -1,0 +1,389 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+<link href="{% static 'libs/ion-rangeslider/css/ion.rangeSlider.min.css' %}" rel="stylesheet" type="text/css"/>
+    <style>
+    .card:hover {
+      box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+    }
+    .product-img:hover img {
+        transition: all 0.5s ease-in-out;
+        filter: blur(4px);
+        transform: scale(1.03);
+    }
+    .product-img:hover .add-to-cart {
+        visibility: visible;
+    }
+    .modal-container {
+        background-color: #007bff;
+        width: 400px;
+        min-height: 150px;
+        position: relative;
+        animation: modalFadeIn ease 0.5s;
+    }
+    .modal {
+        position: fixed;
+        width: 400px;
+        min-height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        display: none;
+    }
+    .modal.open{
+        display: flex;
+        margin-left:500px;
+        margin-top:-200px;
+    }
+    @keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+    .add-to-cart {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        visibility: hidden;
+    }
+    .modal-container {
+        background-color: #007bff;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        padding: 20px;
+        color: white;
+    }
+    .modal-container {
+        background-color: #28a745;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        padding: 20px;
+    }
+    .modal-container h1 {
+        font-size: 24px;
+        margin-bottom: 10px;
+        color: white;
+    }
+    .modal-container p {
+        font-size: 16px;
+        margin-bottom: 20px;
+    }
+    .modal-container footer {
+        font-size: 14px;
+        color: #666;
+        color: white;
+    }
+  </style>
+{% endblock %}
+{% block extra_js %}
+{#    <script src="{% static 'js/pages/add-to-cart.init.js' %}"></script>#}
+    <script>
+        $(document).ready(function() {
+            $('.search-box input[type="text"]').on('keyup input', function() {
+                /* Get input value on change */
+                var inputVal = $(this).val();
+                var resultDropdown = $(this).siblings(".result");
+
+                if (inputVal.length) {
+                    $.get("car/products?", {term: inputVal}).done(function(data) {
+                        // Display the returned data in the resultDropdown
+                        resultDropdown.html(data);
+                    });
+                } else {
+                    resultDropdown.empty();
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block contents %}
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h4 class="card-title mb-4">Filter</h4>
+
+                                        <div>
+                                            <h5 class="font-size-14 mb-3"><a href="{% url 'car-products' %}">Car Products</a></h5>
+                                            <ul class="list-unstyled product-list">
+                                                <li><a href="?category=car interior"><i class="mdi mdi-chevron-right me-1"></i> CAR FURNITURE</a></li>
+                                                <li><a href="?category=car exterior"><i class="mdi mdi-chevron-right me-1"></i> CAR EXTERIOR</a></li>
+                                                <li><a href="?category=car accessories"><i class="mdi mdi-chevron-right me-1"></i> CAR ACCESSORIES</a></li>
+                                                <li><a href="?category=car care services"><i class="mdi mdi-chevron-right me-1"></i> CAR CARE SERVICES</a></li>
+                                                <li><a href="?category=car parts"><i class="mdi mdi-chevron-right me-1"></i> CAR PARTS</a></li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h5 class="font-size-14 mb-3"><a href="{% url 'car-products' %}">Supllier</a></h5>
+                                            <ul class="list-unstyled product-list">
+                                                {% for sup in suppliers %}
+                                                    <li><a href="?supplier={{ sup.id }}"><i class="mdi mdi-chevron-right me-1"></i> {{ sup.name }}</a></li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        <div class="mt-4 pt-3">
+                                            <h5 class="font-size-14 mb-3">Price</h5>
+                                            <input type="text" id="pricerange">
+                                        </div>
+
+                                        <div class="mt-4 pt-3">
+                                            <h5 class="font-size-14 mb-3">Discount</h5>
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" id="productdiscountCheck1">
+                                                <label class="form-check-label" for="productdiscountCheck1">
+                                                    Less than 10%
+                                                </label>
+                                            </div>
+
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" id="productdiscountCheck2">
+                                                <label class="form-check-label" for="productdiscountCheck2">
+                                                    10% or more
+                                                </label>
+                                            </div>
+
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" id="productdiscountCheck3" checked>
+                                                <label class="form-check-label" for="productdiscountCheck3">
+                                                    20% or more
+                                                </label>
+                                            </div>
+
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" id="productdiscountCheck4">
+                                                <label class="form-check-label" for="productdiscountCheck4">
+                                                    30% or more
+                                                </label>
+                                            </div>
+
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" id="productdiscountCheck5">
+                                                <label class="form-check-label" for="productdiscountCheck5">
+                                                    40% or more
+                                                </label>
+                                            </div>
+
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" id="productdiscountCheck6">
+                                                <label class="form-check-label" for="productdiscountCheck6">
+                                                    50% or more
+                                                </label>
+                                            </div>
+
+                                        </div>
+
+                                        <div class="mt-4 pt-3">
+                                            <h5 class="font-size-14 mb-3">Customer Rating</h5>
+                                            <div>
+                                                <div class="form-check mt-2">
+                                                    <input class="form-check-input" type="checkbox" id="productratingCheck1">
+                                                    <label class="form-check-label" for="productratingCheck1">
+                                                        4 <i class="bx bxs-star text-warning"></i>  & Above
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mt-2">
+                                                    <input class="form-check-input" type="checkbox" id="productratingCheck2">
+                                                    <label class="form-check-label" for="productratingCheck2">
+                                                        3 <i class="bx bxs-star text-warning"></i>  & Above
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mt-2">
+                                                    <input class="form-check-input" type="checkbox" id="productratingCheck3">
+                                                    <label class="form-check-label" for="productratingCheck3">
+                                                        2 <i class="bx bxs-star text-warning"></i>  & Above
+                                                    </label>
+                                                </div>
+
+                                                <div class="form-check mt-2">
+                                                    <input class="form-check-input" type="checkbox" id="productratingCheck4">
+                                                    <label class="form-check-label" for="productratingCheck4">
+                                                        1 <i class="bx bxs-star text-warning"></i>
+                                                    </label>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-lg-9">
+
+                                <div class="row mb-3">
+                                    <div class="col-xl-4 col-sm-6">
+                                        <div class="mt-2">
+                                            <h5>Car Products</h5>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-8 col-sm-6">
+                                        <form class="mt-4 mt-sm-0 float-sm-end d-sm-flex align-items-center">
+                                            <div class="search-box me-2">
+                                                <form method="GET" action="{% url 'car-products' %}">
+                                                    <div class="position-relative">
+                                                        <input type="text" class="form-control border-0" placeholder="Search..." name="search">
+                                                        <i class="bx bx-search-alt search-icon"></i>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            <ul class="nav nav-pills product-view-nav justify-content-end mt-3 mt-sm-0">
+                                                <li class="nav-item">
+                                                    <a class="nav-link active" href="#"><i class="bx bx-grid-alt"></i></a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link" href="#"><i class="bx bx-list-ul"></i></a>
+                                                </li>
+                                            </ul>
+
+
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    {% for p in products %}
+                                    <div class="col-xl-4 col-sm-6">
+                                        <div class="card">
+                                            <div class="card-body product_data">
+                                                <div class="product-img position-relative" href="{% url 'car-productdetail' p.pid %}">
+{#                                                    <div class="avatar-sm product-ribbon">#}
+{#                                                        <span class="avatar-title rounded-circle  bg-primary">#}
+{#                                                            - 25 %#}
+{#                                                        </span>#}
+{#                                                    </div>#}
+                                                    {% csrf_token %}
+                                                    <input type="hidden" value="{{ p.pid }}" class="prod_id">
+                                                    <a href="{% url 'car-productdetail' p.pid %}" class="d-block">
+                                                        <img src="{{ p.image.url }}" style="width:250px;height:250px;" alt="" class="img-fluid mx-auto d-block product-img">
+                                                    </a>
+                                                        <button id="addToCartBtn" type="button" class="btn dripicons-cart btn-primary btn-rounded bg-gradient add-to-cart addToCartBtn js-buy-tickets">Add to cart</button>
+                                                </div>
+                                                <div class="mt-4 text-center">
+                                                    <h5 class="mb-3 text-truncate"><a href="{% url 'car-productdetail' p.pid %}" class="text-dark">{{ p.title }}</a></h5>
+
+                                                    <p class="text-muted">
+                                                        <i class="bx bxs-star text-warning"></i>
+                                                        <i class="bx bxs-star text-warning"></i>
+                                                        <i class="bx bxs-star text-warning"></i>
+                                                        <i class="bx bxs-star text-warning"></i>
+                                                        <i class="bx bxs-star text-warning"></i>
+                                                    </p>
+                                                    <h5 class="my-0"><b>{{ p.price }} VND</b></h5>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <!-- end row -->
+
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <ul class="pagination pagination-rounded justify-content-center mt-3 mb-4 pb-1">
+                                    {% if products.has_previous %}
+                                    <li class="page-item">
+                                        <a href="?page={{ products.previous_page_number }}" class="page-link"><i class="mdi mdi-chevron-left"></i></a>
+                                    </li>
+                                    {% endif %}
+                                    {% for page in products.paginator.page_range %}
+                                    {% if products.number == page %}
+                                    <li class="page-item active">
+                                        <a href="?page={{ page }}" class="page-link">{{ page }}</a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item">
+                                        <a href="?page={{ page }}" class="page-link">{{ page }}</a>
+                                    </li>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% if products.has_next %}
+                                    <li class="page-item">
+                                        <a href="?page={{ products.next_page_number }}" class="page-link"><i class="mdi mdi-chevron-right"></i></a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                     </div>
+                        </div>
+
+{% endblock %}
+
+{% block extra_javascript %}
+        <!-- Ion Range Slider-->
+        <script src="{% static 'libs/ion-rangeslider/js/ion.rangeSlider.min.js' %}"></script>
+        <!-- init toastr -->
+        <script src="{% static 'libs/toastr/build/toastr.min.js' %}"></script>
+
+        <script>
+        toastr.options = {
+              "closeButton": false,
+              "debug": false,
+              "newestOnTop": false,
+              "progressBar": false,
+              "positionClass": "toast-top-right",
+              "preventDuplicates": false,
+              "onclick": null,
+              "showDuration": 300,
+              "hideDuration": 1000,
+              "timeOut": 5000,
+              "extendedTimeOut": 1000,
+              "showEasing": "swing",
+              "hideEasing": "linear",
+              "showMethod": "fadeIn",
+              "hideMethod": "fadeOut"
+        }
+        </script>
+        <div class="modal js-modal ">
+        <div class="modal-container js-modal-container">
+            <h1>Thêm sản phẩm thành công!</h1>
+            <p>Vui lòng vào giỏ hàng để kiểm tra lại thông tin sản phẩm.</p>
+        </div>
+    </div>
+
+    <script>
+        const buyBtns = document.querySelectorAll('.js-buy-tickets')
+        const modal = document.querySelector('.js-modal')
+        const modalContainer = document.querySelector('.js-modal-container')
+        const modalClose = document.querySelector('.js-modal-close')
+
+        // Hàm hiển thị(thêm class open vào modal)
+        function showBuyTickets() {
+            modal.classList.add('open')
+        }
+        // Hàm close modal mua vé(gỡ bỏ class modal)
+        function closeBuyTickets() {
+            modal.classList.remove('open')
+        }
+        // lặp qua từng thẻ button và nghe click
+        for(const buyBtn of buyBtns) {
+            buyBtn.addEventListener('click', showBuyTickets)
+        }
+        setInterval(function() {
+          document.querySelector('.open').classList.remove('open');
+        }, 3000);
+        // nghe hành vi click vào button close
+        modalClose.addEventListener('click', closeBuyTickets)
+
+        // click vào modal đóng modal
+        modal.addEventListener('click', closeBuyTickets)
+
+        // chặn lại tính chất nổi bọt, click vào modal-container không bị đóng modal
+        modalContainer.addEventListener('click', function(event) {
+            event.stopPropagation()
+        })
+    </script>
+        <!-- init js -->
+
+        <script src="{% static 'js/pages/add-to-cart.init.js' %}"></script>
+        <script src="{% static 'js/pages/product-filter-range.init.js' %}"></script>
+
+{% endblock %}
